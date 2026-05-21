@@ -1,84 +1,58 @@
 # 🎤 TecnoVoice - Calculadora Financiera por Voz
 
-Gestión financiera inteligente mediante comandos de voz.
+Gestión financiera inteligente mediante comandos de voz. 
+🚀 Demo en Vivo
 
-## 🚀 Demo en vivo
+Abre en tu móvil: TecnoVoice
 
-Abre en tu móvil: [TecnoVoice](https://tu-usuario.github.io/TecnoVoice/)
+<p align="center">
+  <img src="Imagen1.png" alt="TecnoVoice Dashboard Mockup" width="100%" max-width="800px">
+</p>
 
-## ✨ Características
 
-- 💸 Registra gastos e ingresos por voz
-- 📊 Consulta tu saldo y movimientos
-- 🏷️ Organiza por categorías
-- 📱 Funciona en móvil y desktop
-- 💾 Guarda datos localmente
-- 📤 Exporta a CSV
+✨ Características
 
-## 🎤 Comandos de voz
+* 💸 **Registro Inteligente:** Registra gastos e ingresos usando solo tu voz.
+* 📊 **Control Total:** Consulta tu saldo total y los movimientos del día en tiempo real.
+* 🏷️ **Categorización:** Organiza tus finanzas de forma automática por categorías.
+* 📱 **Diseño Responsive:** Interfaz adaptada perfectamente para móviles y computadoras.
+* 💾 **Privacidad Primero:** Guarda todos tus datos de forma 100% local en tu navegador (`LocalStorage`).
+* 📤 **Exportación rápida:** Descarga todo tu historial en formato CSV con un solo comando.
 
-### Agregar movimientos
-- "gasto de 10 mil en comida"
-- "ingreso de 500 mil en sueldo"
-- "gasto de 5000 en transporte"
 
-### Consultar
-- "cuál es mi saldo"
-- "cuánto he gastado"
-- "cuánto gasté en comida"
+## 🎤 Comandos de Voz Soportados
 
-### Gestionar
-- "eliminar último movimiento"
-- "exportar datos"
+Para activar el asistente, presiona el botón del micrófono 🎤 y habla con claridad. Aquí tienes los comandos que puedes utilizar:
 
-## 📱 Uso en móvil
+### 1. Registrar Movimientos
+| Tipo | Ejemplo de Comando |
+| :--- | :--- |
+| **Gastos** | `"Gasto de 10 mil en comida"`, `"Gasto de 5000 en transporte"` |
+| **Ingresos** | `"Ingreso de 500 mil en sueldo"`, `"Ingreso de 20 mil en premio"` |
 
-1. Abre la app en **Chrome** (Android) o **Safari** (iOS)
-2. Presiona el botón del micrófono 🎤
-3. Permite el acceso al micrófono
-4. Habla tu comando claramente
-5. Espera a que procese
+### 2. Consultas y Gestión
+* 📊 **Consultar:** * `"¿Cuál es mi saldo?"`
+  * `"¿Cuánto he gastado?"`
+  * `"¿Cuánto gasté en comida?"`
+* 🔧 **Gestionar:**
+  * `"Eliminar último movimiento"`
+  * `"Exportar datos"`
 
-**Importante:** Debe usarse con HTTPS (GitHub Pages lo proporciona automáticamente)
+---
 
-## 🛠️ Instalación local
+## 📱 Uso en Dispositivos Móviles
 
-```bash
-# Clonar repositorio
-git clone https://github.com/tu-usuario/TecnoVoice.git
-cd TecnoVoice
+1. Abre la aplicación en tu navegador preferido (**Chrome** en Android o **Safari** en iOS).
+2. Presiona el botón del **micrófono 🎤**.
+3. Concede los **permisos de acceso al micrófono** cuando el navegador lo solicite.
+4. Dicta tu comando claramente y espera a que la app lo procese.
 
-# Abrir con servidor local
-python -m http.server 8000
+> ⚠️ **Importante:** Por seguridad del navegador, la API de voz requiere una conexión segura **HTTPS**. Si lo subes a GitHub Pages, este requisito se cumple automáticamente.
 
-# O usar Live Server en VS Code
-```
-
-## 📋 Requisitos
-
-- Navegador moderno con soporte de Web Speech API
-- Micrófono funcional
-- Conexión HTTPS (para móvil)
-
-### Navegadores compatibles
-- ✅ Chrome (Desktop y Android)
-- ✅ Edge (Desktop)
-- ✅ Safari (iOS)
-- ❌ Firefox (soporte limitado)
-- ❌ Chrome iOS (no soportado)
-
-## 🔧 Tecnologías
-
-- HTML5
-- JavaScript (Vanilla)
-- Web Speech API
-- TailwindCSS
-- LocalStorage
-
-## 📄 Licencia
+📄 Licencia
 
 MIT License - Uso libre
-
-## 👨‍💻 Autor
+👨‍💻 Autor
 
 Desarrollado con ❤️ para facilitar la gestión financiera personal
+
