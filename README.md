@@ -4,7 +4,7 @@ Gestión financiera inteligente mediante comandos de voz.
 
 🚀 Demo en Vivo
 
-Abre en tu móvil: TecnoVoice
+Abre en tu móvil: [TecnoVoice](https://tecnovoice.netlify.app/)
 
 ✨ Características
 
