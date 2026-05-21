@@ -1,0 +1,1520 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
+  <meta name="theme-color" content="#4f46e5" />
+  <meta name="description" content="TecnoVoice - Gestión financiera inteligente por voz" />
+  <title>TecnoVoice — Calculadora Financiera por Voz</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#f3f6fb;
+      --card:#ffffff;
+      --primary:#5b52e8;
+      --primary-dark:#4338ca;
+      --success:#10b981;
+      --danger:#ef4444;
+      --muted:#64748b;
+      --shadow:0 4px 20px rgba(79,70,229,0.08);
+    }
+    *{box-sizing:border-box}
+    body{font-family:'Inter',sans-serif;background:var(--bg);margin:0;min-height:100vh;-webkit-font-smoothing:antialiased}
+    
+    .app-container{
+      max-width:420px;
+      margin:0 auto;
+      background:#fff;
+      min-height:100vh;
+      box-shadow:0 0 40px rgba(0,0,0,0.08);
+      position:relative;
+      overflow-x:hidden;
+    }
+    
+    header{
+      padding:24px 20px 20px;
+      background:linear-gradient(135deg,#5b52e8 0%,#7c3aed 100%);
+      color:white;
+      position:relative;
+      overflow:hidden;
+    }
+    header::before{
+      content:'';
+      position:absolute;
+      top:-50%;
+      right:-20%;
+      width:200px;
+      height:200px;
+      background:rgba(255,255,255,0.05);
+      border-radius:50%;
+    }
+    
+    .balance-card{
+      padding:20px;
+      border-radius:16px;
+      background:rgba(255,255,255,0.1);
+      backdrop-filter:blur(10px);
+      box-shadow:0 8px 32px rgba(0,0,0,0.1);
+      position:relative;
+      z-index:1;
+    }
+    
+    .chip{
+      padding:.35rem .75rem;
+      border-radius:999px;
+      background:rgba(255,255,255,0.2);
+      font-weight:600;
+      font-size:.75rem;
+      border:1px solid rgba(255,255,255,0.3);
+      cursor:pointer;
+      transition:all 0.2s;
+    }
+    .chip:hover{background:rgba(255,255,255,0.3)}
+    
+    .card{
+      background:var(--card);
+      border-radius:14px;
+      padding:16px;
+      box-shadow:var(--shadow);
+      transition:transform 0.2s,box-shadow 0.2s;
+    }
+    .card:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(79,70,229,0.12)}
+    
+    .floating-mic{
+      width:72px;
+      height:72px;
+      border-radius:50%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      box-shadow:0 12px 40px rgba(79,70,229,0.3);
+      cursor:pointer;
+      transition:all 0.3s cubic-bezier(0.4,0,0.2,1);
+      position:relative;
+    }
+    .floating-mic:hover{transform:scale(1.05)}
+    .floating-mic:active{transform:scale(0.95)}
+    .listening{animation:pulse 1.5s infinite}
+    .listening::after{
+      content:'';
+      position:absolute;
+      inset:-8px;
+      border-radius:50%;
+      border:3px solid rgba(79,70,229,0.3);
+      animation:ripple 1.5s infinite;
+    }
+    
+    @keyframes pulse{
+      0%,100%{transform:scale(1)}
+      50%{transform:scale(1.08)}
+    }
+    @keyframes ripple{
+      0%{transform:scale(1);opacity:1}
+      100%{transform:scale(1.5);opacity:0}
+    }
+    
+    #viz{
+      width:140px;
+      height:40px;
+      border-radius:10px;
+      background:linear-gradient(135deg,#eef2ff,#f8fafc);
+      display:flex;
+      gap:3px;
+      padding:8px;
+      align-items:flex-end;
+    }
+    #viz span{
+      flex:1;
+      background:linear-gradient(180deg,#7c3aed,#a78bfa);
+      min-height:4px;
+      border-radius:4px;
+      transform-origin:bottom;
+      transition:height 0.1s ease;
+    }
+    
+    #modal,#examples-modal,#settings-modal{
+      backdrop-filter:blur(8px);
+      animation:fadeIn 0.2s;
+    }
+    .modal-content{
+      animation:slideUp 0.3s cubic-bezier(0.4,0,0.2,1);
+      max-height:85vh;
+      overflow-y:auto;
+    }
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+    @keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+    
+    .btn{
+      padding:12px 20px;
+      border-radius:10px;
+      font-weight:600;
+      font-size:.9rem;
+      cursor:pointer;
+      transition:all 0.2s;
+      border:none;
+      outline:none;
+    }
+    .btn-primary{background:var(--primary);color:white}
+    .btn-primary:hover{background:var(--primary-dark);transform:translateY(-1px)}
+    .btn-secondary{background:#f1f5f9;color:#334155}
+    .btn-secondary:hover{background:#e2e8f0}
+    
+    input,select{
+      border:2px solid #e2e8f0;
+      border-radius:10px;
+      padding:12px 14px;
+      font-size:.9rem;
+      transition:border-color 0.2s;
+      outline:none;
+    }
+    input:focus,select:focus{border-color:var(--primary)}
+    
+    .movement-item{
+      background:white;
+      border:1px solid #f1f5f9;
+      border-radius:12px;
+      padding:14px;
+      transition:all 0.2s;
+      cursor:pointer;
+    }
+    .movement-item:hover{border-color:#e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,0.04)}
+    
+    .toast{
+      position:fixed;
+      bottom:20px;
+      left:50%;
+      transform:translateX(-50%);
+      background:#1f2937;
+      color:white;
+      padding:12px 20px;
+      border-radius:10px;
+      box-shadow:0 8px 24px rgba(0,0,0,0.2);
+      z-index:1000;
+      animation:toastSlide 0.3s;
+    }
+    
+    @keyframes toastSlide{from{transform:translateX(-50%) translateY(20px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
+    
+    .small{font-size:.85rem}
+    .text-success{color:var(--success)}
+    .text-danger{color:var(--danger)}
+    .text-muted{color:var(--muted)}
+    
+    *{scroll-behavior:smooth}
+    ::-webkit-scrollbar{width:6px}
+    ::-webkit-scrollbar-track{background:#f1f5f9}
+    ::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:10px}
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <header>
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <div class="text-sm font-semibold opacity-90">TecnoVoice</div>
+          <div class="text-xs opacity-75">Gestión financiera inteligente</div>
+        </div>
+        <div class="flex gap-2">
+          <button id="currency-chip" class="chip" title="Cambiar moneda">CLP</button>
+          <button id="menu-btn" class="chip" title="Menú">⚙️</button>
+        </div>
+      </div>
+      <div class="balance-card">
+        <div class="flex items-start justify-between">
+          <div class="flex-1">
+            <div class="text-xs opacity-80 mb-1">Saldo Actual (Presupuesto)</div>
+            <div id="current-balance" class="text-4xl font-bold tracking-tight">$ 0</div>
+            <div class="flex gap-4 mt-3 text-sm">
+              <div>
+                <div class="text-xs opacity-75">Ingresos:</div>
+                <div id="total-income" class="font-semibold">0</div>
+              </div>
+              <div>
+                <div class="text-xs opacity-75">Gastos:</div>
+                <div id="total-expenses" class="font-semibold">0</div>
+              </div>
+            </div>
+          </div>
+          <button id="eye-toggle" class="chip" title="Ocultar/Mostrar saldo">👁️</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="p-5">
+      <div class="card mb-4" style="background:linear-gradient(135deg,#f8fafc,#ffffff)">
+        <div class="text-xs text-muted font-semibold mb-2">ÚLTIMA INTERACCIÓN</div>
+        <div id="voice-message" class="font-medium text-gray-800 mb-2">"Hola, TecnoVoice. ¿Qué deseas hacer hoy?"</div>
+        <div id="transcript" class="text-sm text-muted italic">Presiona el micrófono y habla.</div>
+      </div>
+
+      <div class="mb-4">
+        <h3 class="font-semibold text-gray-800 mb-3">Comandos Rápidos</h3>
+        <div class="grid grid-cols-3 gap-3">
+          <button onclick="quickCommand('income')" class="card text-center hover:shadow-lg transition-all">
+            <div class="text-2xl mb-2">➕</div>
+            <div class="text-xs font-medium">Ingreso</div>
+          </button>
+          <button onclick="quickCommand('expense')" class="card text-center hover:shadow-lg transition-all">
+            <div class="text-2xl mb-2">➖</div>
+            <div class="text-xs font-medium">Gasto</div>
+          </button>
+          <button onclick="quickCommand('query')" class="card text-center hover:shadow-lg transition-all">
+            <div class="text-2xl mb-2">📄</div>
+            <div class="text-xs font-medium">Consultar</div>
+          </button>
+        </div>
+      </div>
+
+      <div class="flex gap-2 mb-4">
+        <button onclick="openExamples()" class="flex-1 btn btn-secondary text-sm">Ejemplos de comandos</button>
+        <button onclick="clearAll()" class="btn btn-secondary text-sm" style="color:#ef4444">Borrar datos</button>
+      </div>
+
+      <section class="mb-5">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-semibold text-gray-800">Movimientos Recientes</h3>
+          <button onclick="exportData()" class="text-xs text-primary font-medium">Exportar</button>
+        </div>
+        <div id="movements-container" class="space-y-2">
+          <div class="text-center text-muted text-sm py-8">No hay movimientos registrados</div>
+        </div>
+      </section>
+
+      <section class="card mb-5" style="background:linear-gradient(135deg,#faf5ff,#ffffff)">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <div class="text-xs text-muted font-semibold">CONTROL DE VOZ</div>
+            <div class="text-sm font-semibold mt-1">Estado: <span id="mic-state" class="text-primary">Inactivo</span></div>
+          </div>
+          <div id="viz" aria-hidden="true">
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+        </div>
+        <div class="flex items-center justify-center gap-4">
+          <button id="mic-button" class="floating-mic bg-gradient-to-br from-indigo-600 to-purple-600 text-white" title="Presiona para hablar">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/>
+              <path d="M19 10v2a7 7 0 01-14 0v-2"/>
+              <line x1="12" y1="19" x2="12" y2="23"/>
+              <line x1="8" y1="23" x2="16" y2="23"/>
+            </svg>
+          </button>
+          <div>
+            <button id="cont-toggle" class="btn btn-secondary text-xs">Modo Continuo</button>
+            <div class="text-xs text-muted mt-1 text-center">Desactivado</div>
+          </div>
+        </div>
+        <div id="mobile-tip" class="mt-4 p-3 bg-blue-50 rounded-lg text-xs text-blue-700" style="display:none">
+          📱 <strong>Móvil:</strong> Presiona el micrófono y permite el acceso. Habla claro y espera a que termine de escuchar.
+        </div>
+      </section>
+    </main>
+
+    <footer class="p-4 text-center text-xs text-muted border-t">
+      <div class="font-semibold">TecnoVoice</div>
+      <div class="mt-1">Gestión financiera segura por voz • v2.0</div>
+    </footer>
+  </div>
+
+  <!-- Modal para agregar movimiento -->
+  <div id="modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl p-6 w-full max-w-md modal-content">
+      <h3 class="font-bold text-xl mb-4">Agregar Movimiento</h3>
+      <div class="space-y-3">
+        <div>
+          <label class="text-sm font-medium text-gray-700 mb-1 block">Tipo</label>
+          <select id="modal-type" class="w-full">
+            <option value="expense">💸 Gasto</option>
+            <option value="income">💰 Ingreso</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-sm font-medium text-gray-700 mb-1 block">Monto</label>
+          <input id="modal-amount" placeholder="Ej: 12500" type="number" step="0.01" class="w-full" />
+        </div>
+        <div>
+          <label class="text-sm font-medium text-gray-700 mb-1 block">Categoría</label>
+          <input id="modal-category" placeholder="Ej: Comida, Transporte" class="w-full" list="category-list" />
+          <datalist id="category-list"></datalist>
+        </div>
+        <div>
+          <label class="text-sm font-medium text-gray-700 mb-1 block">Descripción (opcional)</label>
+          <input id="modal-desc" placeholder="Ej: Almuerzo en restaurante" class="w-full" />
+        </div>
+        <label class="flex items-center gap-2 text-sm">
+          <input id="modal-recurring" type="checkbox" class="w-4 h-4" />
+          <span>Movimiento recurrente (mensual)</span>
+        </label>
+      </div>
+      <div class="flex gap-3 mt-6">
+        <button onclick="closeModal()" class="flex-1 btn btn-secondary">Cancelar</button>
+        <button onclick="modalSave()" class="flex-1 btn btn-primary">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de ejemplos -->
+  <div id="examples-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl p-6 w-full max-w-md modal-content" style="max-height:85vh;overflow-y:auto">
+      <h3 class="font-bold text-xl mb-4">🎤 Ejemplos de Comandos</h3>
+      <div class="space-y-3 text-sm">
+        <div class="p-3 bg-gradient-to-r from-red-50 to-red-100 rounded-lg border-l-4 border-red-500">
+          <div class="font-semibold text-red-700 mb-1">💸 Agregar gasto:</div>
+          <div class="text-gray-700">"gasto de 12 mil en comida"</div>
+          <div class="text-gray-700">"gasto de 5000 en transporte"</div>
+          <div class="text-gray-700">"gasto de 15000 en entretenimiento"</div>
+          <div class="text-xs text-gray-500 mt-2">💡 Puedes decir: "12 mil", "12000", "doce mil"</div>
+        </div>
+        <div class="p-3 bg-gradient-to-r from-green-50 to-green-100 rounded-lg border-l-4 border-green-500">
+          <div class="font-semibold text-green-700 mb-1">💰 Agregar ingreso:</div>
+          <div class="text-gray-700">"ingreso de 500 mil en sueldo"</div>
+          <div class="text-gray-700">"ingreso de 100000 en freelance"</div>
+          <div class="text-gray-700">"ingreso de 50 mil en ventas"</div>
+          <div class="text-xs text-gray-500 mt-2">💡 Números grandes: "500 mil", "500000", "quinientos mil"</div>
+        </div>
+        <div class="p-3 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg border-l-4 border-blue-500">
+          <div class="font-semibold text-blue-700 mb-1">📊 Consultar saldo:</div>
+          <div class="text-gray-700">"cuál es mi saldo"</div>
+          <div class="text-gray-700">"cuánto tengo"</div>
+          <div class="text-gray-700">"mi balance"</div>
+        </div>
+        <div class="p-3 bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg border-l-4 border-purple-500">
+          <div class="font-semibold text-purple-700 mb-1">📈 Consultar gastos:</div>
+          <div class="text-gray-700">"cuánto he gastado"</div>
+          <div class="text-gray-700">"cuánto gasté en transporte"</div>
+          <div class="text-gray-700">"total de gastos"</div>
+        </div>
+        <div class="p-3 bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg border-l-4 border-orange-500">
+          <div class="font-semibold text-orange-700 mb-1">🗑️ Eliminar:</div>
+          <div class="text-gray-700">"eliminar último movimiento"</div>
+          <div class="text-gray-700">"borrar el último"</div>
+        </div>
+      </div>
+      <button onclick="closeExamples()" class="w-full btn btn-primary mt-4">Entendido</button>
+    </div>
+  </div>
+
+  <!-- Modal de configuración -->
+  <div id="settings-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl p-6 w-full max-w-md modal-content">
+      <h3 class="font-bold text-xl mb-4">⚙️ Configuración</h3>
+      <div class="space-y-4">
+        <div>
+          <label class="text-sm font-medium text-gray-700 mb-2 block">Moneda</label>
+          <select id="currency-select" class="w-full">
+            <option value="USD">🇺🇸 USD - Dólar</option>
+            <option value="CLP">🇨🇱 CLP - Peso Chileno</option>
+            <option value="EUR">🇪🇺 EUR - Euro</option>
+            <option value="MXN">🇲🇽 MXN - Peso Mexicano</option>
+            <option value="ARS">🇦🇷 ARS - Peso Argentino</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-sm font-medium text-gray-700 mb-2 block">Idioma de reconocimiento</label>
+          <select id="sr-lang" class="w-full">
+            <option value="es-CL">Español (Chile)</option>
+            <option value="es-ES">Español (España)</option>
+            <option value="es-MX">Español (México)</option>
+            <option value="es-AR">Español (Argentina)</option>
+            <option value="en-US">English (US)</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-sm font-medium text-gray-700 mb-2 block">Voz de respuesta</label>
+          <select id="voice-select" class="w-full"></select>
+        </div>
+        <div>
+          <label class="text-sm font-medium text-gray-700 mb-2 block">Velocidad de voz: <span id="rate-value">1.0x</span></label>
+          <input id="tts-rate" type="range" min="0.6" max="1.4" step="0.1" value="1" class="w-full" />
+        </div>
+        <div>
+          <label class="flex items-center gap-2 text-sm">
+            <input id="tts-enabled" type="checkbox" checked class="w-4 h-4" />
+            <span>Activar respuestas de voz (TTS)</span>
+          </label>
+        </div>
+      </div>
+      <button onclick="closeSettings()" class="w-full btn btn-primary mt-6">Guardar</button>
+    </div>
+  </div>
+
+  <script>
+  'use strict';
+  
+  console.log('🎤 TecnoVoice v2.0 - Iniciando...');
+  
+  // ============================================
+  // ESTADO GLOBAL
+  // ============================================
+  
+  const APP = {
+    movements: [],
+    categories: ['Comida', 'Transporte', 'Sueldo', 'Entretenimiento', 'Salud', 'Servicios', 'Vivienda', 'Educación', 'Ropa', 'Tecnología', 'Mascotas', 'Viajes', 'Regalos', 'Ahorro'],
+    pendingAction: null,
+    balanceVisible: true,
+    currency: 'CLP',
+    recognition: null,
+    isListening: false,
+    continuousMode: false,
+    audioContext: null,
+    analyser: null
+  };
+  
+  // Elementos DOM
+  const DOM = {
+    micButton: document.getElementById('mic-button'),
+    micState: document.getElementById('mic-state'),
+    voiceMessage: document.getElementById('voice-message'),
+    transcript: document.getElementById('transcript'),
+    movementsContainer: document.getElementById('movements-container'),
+    balanceEl: document.getElementById('current-balance'),
+    totalIncome: document.getElementById('total-income'),
+    totalExpenses: document.getElementById('total-expenses'),
+    viz: document.getElementById('viz'),
+    currencyChip: document.getElementById('currency-chip'),
+    eyeToggle: document.getElementById('eye-toggle'),
+    contToggle: document.getElementById('cont-toggle'),
+    menuBtn: document.getElementById('menu-btn')
+  };
+  
+  // ============================================
+  // UTILIDADES Y SEGURIDAD
+  // ============================================
+  
+  function sanitize(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+  
+  function uid() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2);
+  }
+  
+  function isValidNumber(n) {
+    return typeof n === 'number' && !isNaN(n) && isFinite(n) && n >= 0;
+  }
+  
+  function formatCurrency(amount) {
+    if (!isValidNumber(amount)) amount = 0;
+    const symbols = { USD: '$', CLP: '$', EUR: '€', MXN: '$', ARS: '$' };
+    const symbol = symbols[APP.currency] || '$';
+    return `${symbol} ${Math.round(amount).toLocaleString('es-CL')}`;
+  }
+  
+  function showToast(message, duration = 3000) {
+    console.log('📢 Toast:', message);
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), duration);
+  }
+  
+  // ============================================
+  // PERSISTENCIA DE DATOS
+  // ============================================
+  
+  function saveState() {
+    try {
+      const data = {
+        movements: APP.movements,
+        categories: APP.categories,
+        currency: APP.currency,
+        timestamp: Date.now()
+      };
+      localStorage.setItem('tecnovoice_v2', JSON.stringify(data));
+    } catch (e) {
+      console.error('Error guardando datos:', e);
+      showToast('Error al guardar datos');
+    }
+  }
+  
+  function loadState() {
+    try {
+      const data = JSON.parse(localStorage.getItem('tecnovoice_v2') || '{}');
+      APP.movements = Array.isArray(data.movements) ? data.movements : [];
+      APP.categories = Array.isArray(data.categories) ? data.categories : APP.categories;
+      APP.currency = data.currency || 'CLP';
+      DOM.currencyChip.textContent = APP.currency;
+      renderMovements();
+      recalcTotals();
+    } catch (e) {
+      console.error('Error cargando datos:', e);
+      APP.movements = [];
+    }
+  }
+  
+  function savePending() {
+    try {
+      localStorage.setItem('tecnovoice_pending', JSON.stringify(APP.pendingAction));
+    } catch (e) {}
+  }
+  
+  function loadPending() {
+    try {
+      return JSON.parse(localStorage.getItem('tecnovoice_pending') || 'null');
+    } catch (e) {
+      return null;
+    }
+  }
+  
+  function clearPending() {
+    APP.pendingAction = null;
+    localStorage.removeItem('tecnovoice_pending');
+  }
+  
+  // ============================================
+  // CÁLCULOS Y RENDERIZADO
+  // ============================================
+  
+  function recalcTotals() {
+    const income = APP.movements
+      .filter(m => m.type === 'income')
+      .reduce((sum, m) => sum + Number(m.amount), 0);
+    
+    const expenses = APP.movements
+      .filter(m => m.type === 'expense')
+      .reduce((sum, m) => sum + Number(m.amount), 0);
+    
+    const balance = income - expenses;
+    
+    if (APP.balanceVisible) {
+      DOM.balanceEl.textContent = formatCurrency(balance);
+      DOM.totalIncome.textContent = formatCurrency(income);
+      DOM.totalExpenses.textContent = formatCurrency(expenses);
+    } else {
+      DOM.balanceEl.textContent = '$ ••••••';
+      DOM.totalIncome.textContent = '••••';
+      DOM.totalExpenses.textContent = '••••';
+    }
+  }
+  
+  function renderMovements() {
+    if (APP.movements.length === 0) {
+      DOM.movementsContainer.innerHTML = '<div class="text-center text-muted text-sm py-8">No hay movimientos registrados</div>';
+      recalcTotals();
+      return;
+    }
+    
+    const recent = APP.movements.slice().reverse().slice(0, 10);
+    DOM.movementsContainer.innerHTML = '';
+    
+    recent.forEach(m => {
+      const isExpense = m.type === 'expense';
+      const icon = isExpense ? '💸' : '💰';
+      const colorClass = isExpense ? 'text-danger' : 'text-success';
+      const sign = isExpense ? '-' : '+';
+      
+      const date = new Date(m.date);
+      const dateStr = date.toLocaleDateString('es', { day: '2-digit', month: 'short' });
+      
+      const el = document.createElement('div');
+      el.className = 'movement-item flex justify-between items-center';
+      el.innerHTML = `
+        <div class="flex items-center gap-3">
+          <div class="text-2xl">${icon}</div>
+          <div>
+            <div class="font-medium text-sm">${sanitize(m.description || m.category)}</div>
+            <div class="text-xs text-muted">${sanitize(m.category)} • ${dateStr}</div>
+          </div>
+        </div>
+        <div class="text-right">
+          <div class="font-bold ${colorClass}">${sign}${formatCurrency(m.amount)}</div>
+        </div>
+      `;
+      
+      el.addEventListener('click', () => editMovement(m));
+      DOM.movementsContainer.appendChild(el);
+    });
+    
+    recalcTotals();
+  }
+  
+  function updateCategoryList() {
+    const datalist = document.getElementById('category-list');
+    if (!datalist) return;
+    datalist.innerHTML = APP.categories.map(c => `<option value="${sanitize(c)}">`).join('');
+  }
+  
+  // ============================================
+  // CRUD DE MOVIMIENTOS
+  // ============================================
+  
+  function addMovement(data) {
+    console.log('➕ Agregando movimiento:', data);
+    
+    if (!isValidNumber(data.amount) || data.amount <= 0) {
+      showToast('Monto inválido');
+      return false;
+    }
+    
+    const movement = {
+      id: uid(),
+      type: data.type || 'expense',
+      amount: Number(data.amount),
+      category: sanitize((data.category || 'Defecto').trim()),
+      description: sanitize((data.description || '').trim()),
+      recurring: !!data.recurring,
+      date: data.date || new Date().toISOString()
+    };
+    
+    APP.movements.push(movement);
+    
+    if (!APP.categories.includes(movement.category)) {
+      APP.categories.push(movement.category);
+    }
+    
+    saveState();
+    renderMovements();
+    
+    const msg = `${movement.type === 'expense' ? 'Gasto' : 'Ingreso'} registrado: ${formatCurrency(movement.amount)} en ${movement.category}`;
+    showToast(msg);
+    speakIfEnabled(msg);
+    
+    return true;
+  }
+  
+  function editMovement(movement) {
+    openModal(movement);
+  }
+  
+  function deleteMovement(id) {
+    const index = APP.movements.findIndex(m => m.id === id);
+    if (index >= 0) {
+      const removed = APP.movements.splice(index, 1)[0];
+      saveState();
+      renderMovements();
+      showToast('Movimiento eliminado');
+      return removed;
+    }
+    return null;
+  }
+  
+  function clearAll() {
+    if (!confirm('¿Eliminar todos los movimientos? Esta acción no se puede deshacer.')) return;
+    APP.movements = [];
+    saveState();
+    renderMovements();
+    DOM.voiceMessage.textContent = 'Todos los movimientos han sido eliminados';
+    showToast('Datos eliminados');
+  }
+  
+  function exportData() {
+    if (APP.movements.length === 0) {
+      showToast('No hay datos para exportar');
+      return;
+    }
+    
+    const csv = [
+      ['Fecha', 'Tipo', 'Categoría', 'Descripción', 'Monto'].join(','),
+      ...APP.movements.map(m => [
+        new Date(m.date).toLocaleDateString(),
+        m.type === 'expense' ? 'Gasto' : 'Ingreso',
+        m.category,
+        m.description,
+        m.amount
+      ].join(','))
+    ].join('\n');
+    
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `tecnovoice_${Date.now()}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Datos exportados');
+  }
+  
+  // ============================================
+  // MODALES
+  // ============================================
+  
+  function openModal(data = {}) {
+    document.getElementById('modal').style.display = 'flex';
+    document.getElementById('modal-type').value = data.type || 'expense';
+    document.getElementById('modal-amount').value = data.amount || '';
+    document.getElementById('modal-category').value = data.category || '';
+    document.getElementById('modal-desc').value = data.description || '';
+    document.getElementById('modal-recurring').checked = !!data.recurring;
+    document.getElementById('modal').dataset.editId = data.id || '';
+    updateCategoryList();
+  }
+  
+  function closeModal() {
+    document.getElementById('modal').style.display = 'none';
+    document.getElementById('modal').dataset.editId = '';
+  }
+  
+  function modalSave() {
+    const id = document.getElementById('modal').dataset.editId;
+    const type = document.getElementById('modal-type').value;
+    const amount = Number(document.getElementById('modal-amount').value || 0);
+    const category = document.getElementById('modal-category').value.trim() || 'Defecto';
+    const description = document.getElementById('modal-desc').value.trim();
+    const recurring = document.getElementById('modal-recurring').checked;
+    
+    if (!isValidNumber(amount) || amount <= 0) {
+      showToast('Ingresa un monto válido');
+      return;
+    }
+    
+    if (id) {
+      const movement = APP.movements.find(m => m.id === id);
+      if (movement) {
+        movement.type = type;
+        movement.amount = amount;
+        movement.category = sanitize(category);
+        movement.description = sanitize(description);
+        movement.recurring = recurring;
+        saveState();
+        renderMovements();
+        closeModal();
+        showToast('Movimiento actualizado');
+        return;
+      }
+    }
+    
+    addMovement({ type, amount, category, description, recurring });
+    closeModal();
+  }
+  
+  function openExamples() {
+    document.getElementById('examples-modal').style.display = 'flex';
+  }
+  
+  function closeExamples() {
+    document.getElementById('examples-modal').style.display = 'none';
+  }
+  
+  function openSettings() {
+    document.getElementById('settings-modal').style.display = 'flex';
+    document.getElementById('currency-select').value = APP.currency;
+    populateVoices();
+  }
+  
+  function closeSettings() {
+    APP.currency = document.getElementById('currency-select').value;
+    DOM.currencyChip.textContent = APP.currency;
+    saveState();
+    renderMovements();
+    document.getElementById('settings-modal').style.display = 'none';
+    showToast('Configuración guardada');
+  }
+  
+  function quickCommand(type) {
+    if (type === 'income') {
+      openModal({ type: 'income' });
+    } else if (type === 'expense') {
+      openModal({ type: 'expense' });
+    } else if (type === 'query') {
+      const income = APP.movements.filter(m => m.type === 'income').reduce((s, m) => s + m.amount, 0);
+      const expenses = APP.movements.filter(m => m.type === 'expense').reduce((s, m) => s + m.amount, 0);
+      const balance = income - expenses;
+      const msg = `Tu saldo es ${formatCurrency(balance)}. Ingresos: ${formatCurrency(income)}. Gastos: ${formatCurrency(expenses)}.`;
+      DOM.voiceMessage.textContent = msg;
+      speakIfEnabled(msg);
+    }
+  }
+  
+  // ============================================
+  // RECONOCIMIENTO DE VOZ - MEJORADO Y FUNCIONAL
+  // ============================================
+  
+  function setupRecognition() {
+    console.log('🎤 Configurando reconocimiento de voz...');
+    
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    
+    if (!SpeechRecognition) {
+      console.error('❌ Reconocimiento de voz no disponible');
+      DOM.micState.textContent = 'No disponible';
+      DOM.micButton.disabled = true;
+      showToast('Tu navegador no soporta reconocimiento de voz');
+      return;
+    }
+    
+    APP.recognition = new SpeechRecognition();
+    
+    // Detectar si es móvil
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    console.log('📱 Dispositivo móvil:', isMobile);
+    
+    // Configuración optimizada para móvil
+    APP.recognition.lang = document.getElementById('sr-lang')?.value || 'es-CL';
+    APP.recognition.continuous = false; // En móvil siempre false
+    APP.recognition.interimResults = !isMobile; // En móvil desactivar resultados intermedios
+    APP.recognition.maxAlternatives = 1;
+    
+    console.log('✅ Reconocimiento configurado:', {
+      lang: APP.recognition.lang,
+      continuous: APP.recognition.continuous,
+      interimResults: APP.recognition.interimResults,
+      isMobile: isMobile
+    });
+    
+    APP.recognition.onstart = () => {
+      console.log('🎤 Reconocimiento iniciado');
+      APP.isListening = true;
+      DOM.micState.textContent = 'Escuchando...';
+      DOM.micState.style.color = '#10b981';
+      DOM.micButton.classList.add('listening');
+      DOM.transcript.textContent = 'Escuchando...';
+    };
+    
+    APP.recognition.onend = () => {
+      console.log('🎤 Reconocimiento finalizado');
+      APP.isListening = false;
+      DOM.micState.textContent = 'Inactivo';
+      DOM.micState.style.color = '';
+      DOM.micButton.classList.remove('listening');
+      
+      // En móvil no usar modo continuo
+      if (APP.continuousMode && !isMobile) {
+        setTimeout(() => {
+          try {
+            APP.recognition.start();
+          } catch (e) {
+            console.log('No se pudo reiniciar en modo continuo');
+          }
+        }, 300);
+      }
+    };
+    
+    APP.recognition.onerror = (event) => {
+      console.error('❌ Error de reconocimiento:', event.error);
+      APP.isListening = false;
+      DOM.micState.textContent = 'Error';
+      DOM.micButton.classList.remove('listening');
+      
+      if (event.error === 'no-speech') {
+        DOM.transcript.textContent = 'No se detectó voz. Intenta de nuevo.';
+        showToast('No se detectó voz');
+      } else if (event.error === 'not-allowed') {
+        DOM.transcript.textContent = 'Permiso denegado. Activa el micrófono en configuración.';
+        showToast('Permiso de micrófono denegado');
+      } else if (event.error === 'aborted') {
+        console.log('Reconocimiento abortado');
+      } else {
+        DOM.transcript.textContent = `Error: ${event.error}`;
+        console.error('Error:', event.error);
+      }
+    };
+    
+    APP.recognition.onresult = (event) => {
+      let interim = '';
+      let final = '';
+      
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const result = event.results[i];
+        if (result.isFinal) {
+          final += result[0].transcript;
+        } else {
+          interim += result[0].transcript;
+        }
+      }
+      
+      const displayText = final || interim;
+      DOM.transcript.textContent = displayText || '...';
+      
+      if (final) {
+        console.log('✅ Texto final reconocido:', final);
+        DOM.voiceMessage.textContent = `Comando: "${final.trim()}"`;
+        processVoiceCommand(final.trim());
+      }
+    };
+  }
+  
+  // ============================================
+  // PROCESAMIENTO DE COMANDOS DE VOZ - MEJORADO
+  // ============================================
+  
+  function parseAmount(text) {
+    console.log('💰 Parseando monto de:', text);
+    const lower = text.toLowerCase().replace(/\s+/g, ' ');
+    
+    // Buscar "X mil" o "X miles" (ej: "12 mil", "doce mil")
+    const milMatch = lower.match(/(\d+)\s*(mil|miles)/);
+    if (milMatch) {
+      const amount = parseInt(milMatch[1]) * 1000;
+      console.log('✅ Monto encontrado (miles):', amount);
+      return amount;
+    }
+    
+    // Buscar "X millón" o "X millones"
+    const millonMatch = lower.match(/(\d+)\s*(millón|millones)/);
+    if (millonMatch) {
+      const amount = parseInt(millonMatch[1]) * 1000000;
+      console.log('✅ Monto encontrado (millones):', amount);
+      return amount;
+    }
+    
+    // Buscar números con puntos o comas (ej: "12.000", "12,000")
+    const numWithSeparator = lower.match(/(\d{1,3})[.,](\d{3})/);
+    if (numWithSeparator) {
+      const amount = parseInt(numWithSeparator[1] + numWithSeparator[2]);
+      console.log('✅ Monto encontrado (con separador):', amount);
+      return amount;
+    }
+    
+    // Buscar números de 4+ dígitos directos (ej: "12000", "5000")
+    const bigNumMatch = lower.match(/\b(\d{4,})\b/);
+    if (bigNumMatch) {
+      const amount = parseInt(bigNumMatch[1]);
+      console.log('✅ Monto encontrado (número grande):', amount);
+      return amount;
+    }
+    
+    // Buscar cualquier número (ej: "500", "12")
+    const numMatch = lower.match(/\b(\d+)\b/);
+    if (numMatch) {
+      const amount = parseInt(numMatch[1]);
+      console.log('✅ Monto encontrado (número simple):', amount);
+      return amount;
+    }
+    
+    // Intentar convertir palabras a números
+    const wordAmount = wordsToNumber(lower);
+    if (wordAmount) {
+      console.log('✅ Monto encontrado (palabras):', wordAmount);
+      return wordAmount;
+    }
+    
+    console.log('❌ No se encontró monto');
+    return null;
+  }
+  
+  function wordsToNumber(text) {
+    const words = {
+      'cero': 0, 'uno': 1, 'un': 1, 'una': 1,
+      'dos': 2, 'tres': 3, 'cuatro': 4, 'cinco': 5,
+      'seis': 6, 'siete': 7, 'ocho': 8, 'nueve': 9,
+      'diez': 10, 'once': 11, 'doce': 12, 'trece': 13,
+      'catorce': 14, 'quince': 15, 'dieciséis': 16, 'diecisiete': 17,
+      'dieciocho': 18, 'diecinueve': 19, 'veinte': 20,
+      'treinta': 30, 'cuarenta': 40, 'cincuenta': 50,
+      'sesenta': 60, 'setenta': 70, 'ochenta': 80, 'noventa': 90,
+      'cien': 100, 'ciento': 100, 'doscientos': 200, 'trescientos': 300,
+      'cuatrocientos': 400, 'quinientos': 500, 'seiscientos': 600,
+      'setecientos': 700, 'ochocientos': 800, 'novecientos': 900,
+      'mil': 1000, 'miles': 1000,
+      'millón': 1000000, 'millones': 1000000
+    };
+    
+    let total = 0;
+    let current = 0;
+    const tokens = text.toLowerCase().split(/\s+/);
+    
+    for (const token of tokens) {
+      if (words[token] !== undefined) {
+        const value = words[token];
+        
+        if (value >= 1000) {
+          current = (current || 1) * value;
+          total += current;
+          current = 0;
+        } else if (value >= 100) {
+          current += value;
+        } else {
+          current += value;
+        }
+      }
+    }
+    
+    return total + current || null;
+  }
+  
+  function parseCategory(text) {
+    const lower = text.toLowerCase();
+    
+    // Buscar "en CATEGORIA"
+    const match = lower.match(/en\s+([a-záéíóúñ]+)/i);
+    if (match) {
+      const category = match[1].charAt(0).toUpperCase() + match[1].slice(1);
+      console.log('✅ Categoría encontrada:', category);
+      return category;
+    }
+    
+    console.log('ℹ️ No se encontró categoría, usando Defecto');
+    return 'Defecto';
+  }
+  
+  function processVoiceCommand(text) {
+    console.log('🔍 Procesando comando:', text);
+    console.log('📝 Texto original:', text);
+    const lower = text.toLowerCase();
+    
+    // CONSULTAR SALDO
+    if (/(cuál|cual|cuanto|cuánto|muestra|muéstrame|ver|dime).*(saldo|balance|tengo|disponible)/i.test(lower)) {
+      console.log('📊 Comando: Consultar saldo');
+      const income = APP.movements.filter(m => m.type === 'income').reduce((s, m) => s + m.amount, 0);
+      const expenses = APP.movements.filter(m => m.type === 'expense').reduce((s, m) => s + m.amount, 0);
+      const balance = income - expenses;
+      const msg = `Tu saldo es ${formatCurrency(balance)}`;
+      DOM.voiceMessage.textContent = msg;
+      speakIfEnabled(msg);
+      return;
+    }
+    
+    // CONSULTAR GASTOS TOTALES
+    if (/(cuánto|cuanto|total|suma).*(gastado|gasté|gaste|gastos)/i.test(lower) && !/(en|por)\s+[a-z]/i.test(lower)) {
+      console.log('📊 Comando: Consultar gastos totales');
+      const expenses = APP.movements.filter(m => m.type === 'expense').reduce((s, m) => s + m.amount, 0);
+      const msg = `Has gastado ${formatCurrency(expenses)} en total`;
+      DOM.voiceMessage.textContent = msg;
+      speakIfEnabled(msg);
+      return;
+    }
+    
+    // CONSULTAR INGRESOS TOTALES
+    if (/(cuánto|cuanto|total|suma).*(ganado|gané|ingresado|ingresé|ingresos)/i.test(lower)) {
+      console.log('📊 Comando: Consultar ingresos totales');
+      const income = APP.movements.filter(m => m.type === 'income').reduce((s, m) => s + m.amount, 0);
+      const msg = `Has ingresado ${formatCurrency(income)} en total`;
+      DOM.voiceMessage.textContent = msg;
+      speakIfEnabled(msg);
+      return;
+    }
+    
+    // CONSULTAR GASTOS POR CATEGORÍA
+    if (/(cuánto|cuanto).*(gastado|gasté|gaste).*(en|por)\s+[a-z]/i.test(lower)) {
+      console.log('📊 Comando: Consultar gastos por categoría');
+      const category = parseCategory(text);
+      const spent = APP.movements
+        .filter(m => m.type === 'expense' && m.category.toLowerCase() === category.toLowerCase())
+        .reduce((s, m) => s + m.amount, 0);
+      const msg = `Has gastado ${formatCurrency(spent)} en ${category}`;
+      DOM.voiceMessage.textContent = msg;
+      speakIfEnabled(msg);
+      return;
+    }
+    
+    // AGREGAR GASTO - Mejorado
+    if (/(añadir|agregar|registrar|gasto|gastar)/i.test(lower) && !/ingreso/i.test(lower)) {
+      console.log('💸 Comando: Agregar gasto');
+      const amount = parseAmount(text);
+      const category = parseCategory(text);
+      
+      console.log('💰 Monto detectado:', amount);
+      console.log('🏷️ Categoría detectada:', category);
+      
+      if (amount) {
+        addMovement({ type: 'expense', amount, category });
+      } else {
+        const msg = 'No entendí el monto. Intenta decir: gasto de 12 mil en comida, o gasto de 5000 en transporte';
+        DOM.voiceMessage.textContent = msg;
+        speakIfEnabled('No entendí el monto');
+        showToast('Ejemplo: "gasto de 12 mil en comida"');
+      }
+      return;
+    }
+    
+    // AGREGAR INGRESO - Mejorado
+    if (/(añadir|agregar|registrar|ingreso|ingresar|ganado|gané)/i.test(lower)) {
+      console.log('💰 Comando: Agregar ingreso');
+      const amount = parseAmount(text);
+      const category = parseCategory(text);
+      
+      console.log('💰 Monto detectado:', amount);
+      console.log('🏷️ Categoría detectada:', category);
+      
+      if (amount) {
+        addMovement({ type: 'income', amount, category });
+      } else {
+        const msg = 'No entendí el monto. Intenta decir: ingreso de 500 mil en sueldo, o ingreso de 100000 en ventas';
+        DOM.voiceMessage.textContent = msg;
+        speakIfEnabled('No entendí el monto');
+        showToast('Ejemplo: "ingreso de 500 mil en sueldo"');
+      }
+      return;
+    }
+    
+    // ELIMINAR ÚLTIMO
+    if (/(eliminar|borrar|quitar|deshacer).*(último|ultimo|anterior)/i.test(lower)) {
+      console.log('🗑️ Comando: Eliminar último');
+      const last = APP.movements[APP.movements.length - 1];
+      if (!last) {
+        const msg = 'No hay movimientos para eliminar';
+        DOM.voiceMessage.textContent = msg;
+        speakIfEnabled(msg);
+        return;
+      }
+      
+      APP.pendingAction = { kind: 'delete', id: last.id };
+      const msg = `¿Confirmar eliminar ${last.category} de ${formatCurrency(last.amount)}? Di "confirmar" o "cancelar"`;
+      DOM.voiceMessage.textContent = msg;
+      speakIfEnabled('¿Confirmar eliminación?');
+      savePending();
+      return;
+    }
+    
+    // CONFIRMAR
+    if (/^(confirmar|sí|si|ok|vale|adelante|correcto)$/i.test(lower)) {
+      console.log('✅ Comando: Confirmar');
+      const pending = APP.pendingAction || loadPending();
+      if (!pending) {
+        DOM.voiceMessage.textContent = 'No hay acciones pendientes';
+        return;
+      }
+      
+      if (pending.kind === 'delete') {
+        deleteMovement(pending.id);
+        clearPending();
+        speakIfEnabled('Eliminado');
+      }
+      return;
+    }
+    
+    // CANCELAR
+    if (/^(cancelar|no|detener)$/i.test(lower)) {
+      console.log('❌ Comando: Cancelar');
+      clearPending();
+      DOM.voiceMessage.textContent = 'Acción cancelada';
+      speakIfEnabled('Cancelado');
+      return;
+    }
+    
+    // EXPORTAR
+    if (/(exportar|descargar|guardar).*(datos|movimientos)/i.test(lower)) {
+      console.log('📤 Comando: Exportar');
+      exportData();
+      return;
+    }
+    
+    // AYUDA
+    if (/(ayuda|help|comandos|qué puedo|que puedo)/i.test(lower)) {
+      console.log('❓ Comando: Ayuda');
+      openExamples();
+      speakIfEnabled('Aquí tienes ejemplos de comandos');
+      return;
+    }
+    
+    // COMANDO NO RECONOCIDO
+    console.log('❓ Comando no reconocido');
+    const msg = 'No entendí. Intenta: "gasto de 10 mil en comida" o "cuál es mi saldo"';
+    DOM.voiceMessage.textContent = msg;
+    speakIfEnabled('No entendí el comando');
+  }
+  
+  // ============================================
+  // TEXT-TO-SPEECH
+  // ============================================
+  
+  function populateVoices() {
+    const select = document.getElementById('voice-select');
+    if (!select) return;
+    
+    select.innerHTML = '<option value="">Voz predeterminada</option>';
+    const voices = speechSynthesis.getVoices() || [];
+    
+    voices.forEach(voice => {
+      const option = document.createElement('option');
+      option.value = voice.name;
+      option.textContent = `${voice.name} (${voice.lang})`;
+      select.appendChild(option);
+    });
+  }
+  
+  function numberToWords(num) {
+    if (num === 0) return 'cero';
+    
+    const units = ['', 'uno', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve'];
+    const teens = ['diez', 'once', 'doce', 'trece', 'catorce', 'quince', 'dieciséis', 'diecisiete', 'dieciocho', 'diecinueve'];
+    const tens = ['', '', 'veinte', 'treinta', 'cuarenta', 'cincuenta', 'sesenta', 'setenta', 'ochenta', 'noventa'];
+    const hundreds = ['', 'ciento', 'doscientos', 'trescientos', 'cuatrocientos', 'quinientos', 'seiscientos', 'setecientos', 'ochocientos', 'novecientos'];
+    
+    if (num >= 1000000) {
+      const millions = Math.floor(num / 1000000);
+      const rest = num % 1000000;
+      let result = millions === 1 ? 'un millón' : numberToWords(millions) + ' millones';
+      if (rest > 0) result += ' ' + numberToWords(rest);
+      return result;
+    }
+    
+    if (num >= 1000) {
+      const thousands = Math.floor(num / 1000);
+      const rest = num % 1000;
+      let result = thousands === 1 ? 'mil' : numberToWords(thousands) + ' mil';
+      if (rest > 0) result += ' ' + numberToWords(rest);
+      return result;
+    }
+    
+    if (num >= 100) {
+      const hundred = Math.floor(num / 100);
+      const rest = num % 100;
+      let result = num === 100 ? 'cien' : hundreds[hundred];
+      if (rest > 0) result += ' ' + numberToWords(rest);
+      return result;
+    }
+    
+    if (num >= 20) {
+      const ten = Math.floor(num / 10);
+      const unit = num % 10;
+      if (unit === 0) return tens[ten];
+      return tens[ten] + ' y ' + units[unit];
+    }
+    
+    if (num >= 10) {
+      return teens[num - 10];
+    }
+    
+    return units[num];
+  }
+  
+  function formatTextForSpeech(text) {
+    console.log('📝 Texto original para voz:', text);
+    
+    // Reemplazar $ seguido de espacio y números (con puntos o comas)
+    // Ejemplos: "$ 5.000", "$ 12.000", "$ 500.000"
+    let result = text.replace(/\$\s+([0-9]+(?:[.,][0-9]+)*)/g, (match, number) => {
+      // Limpiar el número: quitar todos los puntos y comas
+      const cleanNumber = number.replace(/[.,]/g, '');
+      const num = parseInt(cleanNumber);
+      
+      if (isNaN(num) || num === 0) return match;
+      
+      const words = numberToWords(num);
+      console.log(`💰 Convirtiendo "${match}" (${number}) → "${words} pesos"`);
+      return words + ' pesos';
+    });
+    
+    console.log('📝 Texto final para voz:', result);
+    return result;
+  }
+  
+  function speakIfEnabled(text) {
+    if (!document.getElementById('tts-enabled')?.checked) return;
+    if (!window.speechSynthesis) return;
+    
+    window.speechSynthesis.cancel();
+    
+    // Convertir números a palabras para mejor pronunciación
+    const textToSpeak = formatTextForSpeech(text);
+    console.log('🔊 Texto original:', text);
+    console.log('🔊 Texto a decir:', textToSpeak);
+    
+    const utterance = new SpeechSynthesisUtterance(textToSpeak);
+    utterance.lang = document.getElementById('sr-lang')?.value || 'es-CL';
+    utterance.rate = Number(document.getElementById('tts-rate')?.value || 1);
+    utterance.pitch = 1;
+    utterance.volume = 1;
+    
+    const selectedVoice = document.getElementById('voice-select')?.value;
+    if (selectedVoice) {
+      const voice = speechSynthesis.getVoices().find(v => v.name === selectedVoice);
+      if (voice) utterance.voice = voice;
+    }
+    
+    window.speechSynthesis.speak(utterance);
+  }
+  
+  // ============================================
+  // VISUALIZADOR DE AUDIO
+  // ============================================
+  
+  async function setupVisualizer(stream) {
+    try {
+      if (!APP.audioContext) {
+        APP.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        APP.analyser = APP.audioContext.createAnalyser();
+        APP.analyser.fftSize = 128;
+        
+        const source = APP.audioContext.createMediaStreamSource(stream);
+        source.connect(APP.analyser);
+        
+        animateVisualizer();
+      }
+    } catch (e) {
+      console.warn('Visualizador no disponible:', e);
+    }
+  }
+  
+  function animateVisualizer() {
+    if (!APP.analyser) return;
+    
+    const dataArray = new Uint8Array(APP.analyser.frequencyBinCount);
+    APP.analyser.getByteFrequencyData(dataArray);
+    
+    const spans = DOM.viz.querySelectorAll('span');
+    for (let i = 0; i < spans.length; i++) {
+      const value = dataArray[i] || 0;
+      const height = Math.max(4, Math.round((value / 255) * 32));
+      spans[i].style.height = height + 'px';
+    }
+    
+    requestAnimationFrame(animateVisualizer);
+  }
+  
+  // ============================================
+  // EVENT LISTENERS
+  // ============================================
+  
+  DOM.micButton.addEventListener('click', async () => {
+    console.log('🎤 Botón de micrófono presionado');
+    
+    if (!APP.recognition) {
+      console.log('⚠️ Reconocimiento no configurado, configurando...');
+      setupRecognition();
+      if (!APP.recognition) return;
+    }
+    
+    if (APP.isListening) {
+      console.log('🛑 Deteniendo reconocimiento');
+      try {
+        APP.recognition.stop();
+      } catch (e) {
+        console.log('Error al detener:', e);
+      }
+      DOM.micState.textContent = 'Deteniendo...';
+      return;
+    }
+    
+    try {
+      console.log('🎤 Iniciando reconocimiento...');
+      
+      // En móvil, primero intentar iniciar directamente
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      
+      if (isMobile) {
+        // En móvil, iniciar directamente sin pedir permisos explícitos
+        console.log('📱 Modo móvil: iniciando directamente');
+        APP.recognition.start();
+      } else {
+        // En desktop, pedir permisos primero
+        console.log('💻 Modo desktop: solicitando permisos');
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        console.log('✅ Permiso de micrófono concedido');
+        setupVisualizer(stream);
+        APP.recognition.start();
+      }
+    } catch (e) {
+      console.error('❌ Error:', e);
+      
+      // Si falla, intentar iniciar de todas formas
+      try {
+        console.log('🔄 Intentando iniciar de todas formas...');
+        APP.recognition.start();
+      } catch (e2) {
+        console.error('❌ Error final:', e2);
+        showToast('No se pudo acceder al micrófono. Verifica los permisos.');
+        DOM.micState.textContent = 'Error';
+        DOM.transcript.textContent = 'Error: Verifica permisos del navegador';
+      }
+    }
+  });
+  
+  DOM.contToggle.addEventListener('click', () => {
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    if (isMobile) {
+      showToast('Modo continuo no disponible en móvil');
+      return;
+    }
+    
+    APP.continuousMode = !APP.continuousMode;
+    DOM.contToggle.textContent = APP.continuousMode ? 'Continuo ✓' : 'Modo Continuo';
+    DOM.contToggle.nextElementSibling.textContent = APP.continuousMode ? 'Activado' : 'Desactivado';
+    
+    if (APP.recognition) {
+      APP.recognition.continuous = APP.continuousMode;
+      if (APP.isListening) {
+        APP.recognition.stop();
+        setTimeout(() => APP.recognition.start(), 300);
+      }
+    }
+    
+    showToast(`Modo continuo ${APP.continuousMode ? 'activado' : 'desactivado'}`);
+  });
+  
+  DOM.eyeToggle.addEventListener('click', () => {
+    APP.balanceVisible = !APP.balanceVisible;
+    DOM.eyeToggle.textContent = APP.balanceVisible ? '👁️' : '🔒';
+    recalcTotals();
+  });
+  
+  DOM.currencyChip.addEventListener('click', () => {
+    openSettings();
+  });
+  
+  DOM.menuBtn.addEventListener('click', () => {
+    openSettings();
+  });
+  
+  // Cerrar modales al hacer clic fuera
+  document.getElementById('modal').addEventListener('click', (e) => {
+    if (e.target.id === 'modal') closeModal();
+  });
+  
+  document.getElementById('examples-modal').addEventListener('click', (e) => {
+    if (e.target.id === 'examples-modal') closeExamples();
+  });
+  
+  document.getElementById('settings-modal').addEventListener('click', (e) => {
+    if (e.target.id === 'settings-modal') closeSettings();
+  });
+  
+  // Actualizar velocidad de voz
+  document.getElementById('tts-rate')?.addEventListener('input', (e) => {
+    document.getElementById('rate-value').textContent = Number(e.target.value).toFixed(1) + 'x';
+  });
+  
+  // Exponer funciones globales
+  window.openModal = openModal;
+  window.closeModal = closeModal;
+  window.modalSave = modalSave;
+  window.openExamples = openExamples;
+  window.closeExamples = closeExamples;
+  window.openSettings = openSettings;
+  window.closeSettings = closeSettings;
+  window.quickCommand = quickCommand;
+  window.clearAll = clearAll;
+  window.exportData = exportData;
+  
+  // ============================================
+  // INICIALIZACIÓN
+  // ============================================
+  
+  function init() {
+    console.log('🚀 Inicializando TecnoVoice...');
+    
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    console.log('📱 Dispositivo:', isMobile ? 'Móvil' : 'Desktop');
+    
+    loadState();
+    setupRecognition();
+    populateVoices();
+    
+    if (window.speechSynthesis) {
+      window.speechSynthesis.onvoiceschanged = populateVoices;
+    }
+    
+    // Ocultar modo continuo en móvil y mostrar tip
+    if (isMobile) {
+      DOM.contToggle.style.display = 'none';
+      DOM.contToggle.nextElementSibling.style.display = 'none';
+      const mobileTip = document.getElementById('mobile-tip');
+      if (mobileTip) mobileTip.style.display = 'block';
+    }
+    
+    console.log('✅ TecnoVoice listo');
+    
+    setTimeout(() => {
+      if (APP.movements.length === 0) {
+        const msg = isMobile 
+          ? 'Presiona el micrófono y permite el acceso' 
+          : 'Presiona el micrófono para comenzar';
+        showToast(msg);
+      }
+    }, 1000);
+  }
+  
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+  </script>
+</body>
+</html>
