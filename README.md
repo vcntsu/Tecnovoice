@@ -1,14 +1,10 @@
 # 🎤 TecnoVoice - Calculadora Financiera por Voz
 
 Gestión financiera inteligente mediante comandos de voz. 
+
 🚀 Demo en Vivo
 
 Abre en tu móvil: TecnoVoice
-
-<p align="center">
-  <img src="Imagen1.png" alt="TecnoVoice Dashboard Mockup" width="100%" max-width="800px">
-</p>
-
 
 ✨ Características
 
